@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @ApplicationScoped
-@Path("/")
+@Path("/finnTid")
 class Resource(
     val service: Service,
     val epostsender: Epostsender,
