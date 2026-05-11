@@ -16,7 +16,7 @@ class Epostsender(
                 "Ledig tid for bryllup",
                 text
             )
-            println("Sender epost")
+            println("Sender epost om ${ledigeTider.size} ledige tider")
             mailer.send(mail)
             println("Sendte epost")
         }
