@@ -23,6 +23,8 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-client-jackson")
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    implementation("io.quarkus:quarkus-mailer")
 }
 
 group = "no.mads"

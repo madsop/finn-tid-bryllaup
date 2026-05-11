@@ -1,25 +1,45 @@
 package no.mads
 
+import io.smallrye.common.annotation.Blocking
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
+import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.eclipse.microprofile.rest.client.inject.RestClient
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.Month
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @ApplicationScoped
 @Path("/")
-class Resource(val service: Service) {
+class Resource(
+    val service: Service,
+    val epostsender: Epostsender,
+    @ConfigProperty(name = "datoer")
+    private var datoer: String,
+) {
+    private val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
     @GET
+    @Blocking
     fun finnTid(): List<LedigTid> {
-        val muligheter = listOf<Request>(
-        )
-        val ledigeTider = service.finnTid(muligheter)
-        if (ledigeTider.isNotEmpty()) {
-            // Varsle
+        val aktuelleDatoer = datoer.split(" ").map {
+            val splitted = it.split(",")
+            val dato = LocalDate.parse(splitted[0], pattern)
+            val stedId = UUID.fromString(splitted[1])
+            val sted: String = splitted[2]
+            Request(stedId, dato, sted)
         }
+
+        val ledigeTider = service.finnTid(aktuelleDatoer)
+
+        if (ledigeTider.isNotEmpty()) {
+            epostsender.sendEpost(ledigeTider)
+        } else {
+            println("Fant ingen ledige tider")
+        }
+
         return ledigeTider
     }
 }
@@ -28,24 +48,26 @@ class Resource(val service: Service) {
 class Service(
     @RestClient val klient: Klient
 ) {
-    fun finnTid(request: List<Request>) = request.flatMap { finnTid(it.rom, it.fra, it.til) }
+    fun finnTid(request: List<Request>) = request.flatMap { finnTid(it.stedId, it.sted, it.dag, it.dag) }
 
-    fun finnTid(rom: UUID, fra: LocalDate, til: LocalDate): List<LedigTid> {
-        return klient.finnTid(rom, fra, til).timeslotsByDate.entries
+    fun finnTid(stedId: UUID, sted: String, fra: LocalDate, til: LocalDate): List<LedigTid> {
+        return klient.finnTid(stedId, fra, til).timeslotsByDate.entries
             .map { it.key to it.value.filter { tid -> tid.bookingAllowed || tid.displayAsBlockedButAllowed } }
             .filter { it.second.isNotEmpty() }
-            .flatMap { entry -> entry.second.map { LedigTid(entry.first, it.startTime, it) } }
+            .flatMap { entry -> entry.second.map { LedigTid(entry.first, it.startTime,  stedId, sted, it) } }
     }
 }
 
 data class Request(
-    val rom: UUID,
-    val fra: LocalDate,
-    val til: LocalDate,
+    val stedId: UUID,
+    val dag: LocalDate,
+    val sted: String
 )
 
 data class LedigTid(
     val dato: LocalDate,
     val starttid: LocalTime,
+    val stedId: UUID,
+    val sted: String,
     val tidsslot: Timeslot
 )
