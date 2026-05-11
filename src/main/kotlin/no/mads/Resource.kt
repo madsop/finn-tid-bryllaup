@@ -22,8 +22,6 @@ class Resource(
     @GET
     @Blocking
     fun finnTid(): List<LedigTid> {
-        println(System.getenv("password"))
-        println(secretFactory.getEpost())
         val aktuelleDatoer = secretFactory.getDatoer().split(" ").map {
             val splitted = it.split(",")
             val dato = LocalDate.parse(splitted[0], pattern)
