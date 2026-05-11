@@ -3,16 +3,14 @@ package no.mads
 import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import jakarta.enterprise.context.Dependent
-import org.eclipse.microprofile.config.inject.ConfigProperty
 
 @Dependent
 class Epostsender(
     val mailer: Mailer,
-    @ConfigProperty(name = "quarkus.epost")
-    private var epost: String) {
+    val secretFactory: SecretFactory) {
     fun sendEpost(ledigeTider: List<LedigTid>) {
         val text = ledigeTider.prettyPrint()
-        epost.split(" ").forEach { epost ->
+        secretFactory.getEpost().split(" ").forEach { epost ->
             val mail = Mail.withText(
                 epost,
                 "Ledig tid for bryllup",

@@ -4,7 +4,6 @@ import io.smallrye.common.annotation.Blocking
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
-import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.eclipse.microprofile.rest.client.inject.RestClient
 import java.time.LocalDate
 import java.time.LocalTime
@@ -16,15 +15,14 @@ import java.util.UUID
 class Resource(
     val service: Service,
     val epostsender: Epostsender,
-    @ConfigProperty(name = "datoer")
-    private var datoer: String,
+    val secretFactory: SecretFactory,
 ) {
     private val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     @GET
     @Blocking
     fun finnTid(): List<LedigTid> {
-        val aktuelleDatoer = datoer.split(" ").map {
+        val aktuelleDatoer = secretFactory.getDatoer().split(" ").map {
             val splitted = it.split(",")
             val dato = LocalDate.parse(splitted[0], pattern)
             val stedId = UUID.fromString(splitted[1])
