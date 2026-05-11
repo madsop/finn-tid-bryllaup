@@ -14,15 +14,15 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
+    implementation("io.quarkiverse.googlecloudservices:quarkus-google-cloud-secret-manager")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
-    implementation("io.quarkus:quarkus-rest")
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:quarkus-google-cloud-services-bom:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-kotlin")
-    implementation("io.quarkus:quarkus-smallrye-jwt")
-    implementation("io.quarkus:quarkus-smallrye-jwt-build")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("io.quarkus:quarkus-arc")
-    testImplementation("io.quarkus:quarkus-junit")
-    testImplementation("io.rest-assured:rest-assured")
+
+    implementation("io.quarkus:quarkus-rest-client-jackson")
+    implementation("io.quarkus:quarkus-rest-jackson")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 
 group = "no.mads"
@@ -44,5 +44,11 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
         javaParameters = true
+        /*
+        Denne er for å unngå unødige advarsler om https://youtrack.jetbrains.com/issue/KT-73255
+        Vi bruker egentlig bare konstruktør-varianten, men vil egentlig helst holde oss til kotlin sin standardvariant
+        Så når dette er blitt standarden i kotlin - som det skal bli - så kan vi skru av denne
+         */
+        freeCompilerArgs = listOf("-Xannotation-default-target=param-property", "-Xjvm-default=all")
     }
 }
